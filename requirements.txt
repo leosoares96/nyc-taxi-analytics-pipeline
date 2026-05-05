@@ -1,0 +1,4 @@
+duckdb
+pandas
+kagglehub
+great_expectations
