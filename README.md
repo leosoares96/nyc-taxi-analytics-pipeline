@@ -170,4 +170,4 @@ https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data
 
 Projeto desenvolvido para fins de estudo em análise de dados, engenharia de dados e visualização interativa.
 
-@lesosoares96
+@lesoares96
