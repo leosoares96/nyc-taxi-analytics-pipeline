@@ -1,138 +1,88 @@
 # 🚕 NYC Taxi Analytics Pipeline
 
-Projeto de análise exploratória e visualização de dados de corridas de táxi em Nova York, utilizando o dataset público do Kaggle:
+> Study project — built to practise analytical data engineering end to end.
 
-📦 https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data
+An analytics pipeline over New York City yellow taxi trips: it ingests the public Kaggle
+dataset, builds aggregated analytical datasets with **DuckDB**, and serves them through an
+interactive **Streamlit** dashboard for urban mobility analysis.
 
-O projeto realiza processamento de dados, agregações e construção de um dashboard interativo em Streamlit para análise de padrões de mobilidade urbana.
-
----
-
-# 📊 Objetivo do Projeto
-
-O objetivo é transformar dados brutos de corridas de táxi em insights acionáveis, permitindo:
-
-- Análise de demanda ao longo do tempo
-- Identificação de padrões por dia e semana
-- Avaliação de comportamento por passageiros
-- Distribuição de pagamentos
-- Rotas mais frequentes
+📦 Dataset: https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data
 
 ---
 
-# 🧠 Problema de Negócio
+## Goal
 
-Como entender o comportamento das corridas de táxi em NYC para responder perguntas como:
+Turn raw trip records into answerable business questions:
 
-- Quando a demanda é maior?
-- Existe sazonalidade diária ou semanal?
-- Quais padrões de pagamento predominam?
-- Quais rotas são mais frequentes?
-- Como os dados se comportam por segmento?
+- When is demand highest?
+- Is there daily or weekly seasonality?
+- Which payment patterns dominate?
+- Which routes are the most frequent?
+- How does behaviour change by passenger count or shift?
 
 ---
 
-# 🏗️ Arquitetura do Projeto
+## Architecture
 
 ```
 nyc-taxi-analytics-pipeline/
 │
-├── app/ # Dashboard Streamlit
-│ └── app.py
+├── app/
+│   └── app.py          # Streamlit dashboard
 │
 ├── data/
-│ ├── raw/ # Dados originais do Kaggle
-│ └── processed/ # Dados tratados e agregados
+│   ├── raw/            # original Kaggle CSVs
+│   └── processed/      # aggregated Parquet datasets
 │
-├── src/ # Scripts de processamento
+├── src/
+│   ├── extract.py      # Kaggle download via kagglehub
+│   └── analytics.py    # DuckDB aggregations -> Parquet
 │
-├── main.py # Pipeline principal
-├── requirements.txt # Dependências
-└── .gitignore
+├── main.py             # pipeline entry point
+└── requirements.txt
 ```
 
 ---
 
-# ⚙️ Pipeline de Dados
+## Pipeline
 
-O fluxo do projeto segue as etapas:
+**1. Ingestion** — `src/extract.py` downloads the dataset with `kagglehub`, unpacks it and
+stores the raw CSVs under `data/raw/`.
 
-### 1. Ingestão
+**2. Aggregation** — `src/analytics.py` opens an in-process **DuckDB** connection, reads the
+raw CSVs with `read_csv_auto`, and writes one Parquet file per analytical cut to
+`data/processed/`:
 
-- Download dos dados do Kaggle
-- Armazenamento em `data/raw`
+| Dataset | Grain |
+| --- | --- |
+| `by_passenger` | passenger count |
+| `by_day` | daily metrics |
+| `by_week` | weekly metrics |
+| `by_month` | monthly metrics |
+| `by_hour` | hour of day |
+| `by_shift_payment` | shift × payment type |
+| `by_route_top100` | 100 most frequent routes |
 
-### 2. Processamento
-
-- Limpeza de dados
-- Conversão de tipos (datas, valores numéricos)
-- Tratamento de inconsistências
-
-### 3. Agregações (features analíticas)
-
-Geração de datasets derivados:
-
-- `by_passenger` → análise por número de passageiros
-- `by_day` → tendência diária
-- `by_week` → agregação semanal
-- `by_shift_payment` → análise por forma de pagamento e turno
-- `by_route_top100` → top 100 rotas mais frequentes
+**3. Serving** — `app/app.py` reads the Parquet datasets with pandas and renders KPIs, time
+series, distributions and automatic observations about variability and skew.
 
 ---
 
-# 📈 Dashboard (Streamlit)
+## Running it
 
-O dashboard interativo permite:
-
-### 📊 KPIs
-
-- Total de corridas/valor
-- Média por métrica
-- Máximo e mínimo
-
-### 📅 Análise temporal
-
-- Tendência diária
-- Crescimento ou queda ao longo do tempo
-
-### 📦 Distribuição
-
-- Segmentação por categoria
-- Concentração de volume
-
-### 🧠 Insights automáticos
-
-- Detecção de variabilidade
-- Assimetria de distribuição
-- Padrões relevantes dos dados
-
-# 🖥️ Interface do Dashboard
-
-O dashboard foi desenvolvido em Streamlit com foco em:
-
-- UX simples e intuitiva
-- Layout moderno estilo BI
-- Cards de indicadores (KPIs)
-- Gráficos automáticos
-- Seleção dinâmica de datasets
-
----
-
-# 🚀 Como Executar o Projeto
-
-## 1. Instalar dependências
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 2. Executar o pipeline (opcional)
+Run the pipeline (downloads the dataset and builds the Parquet datasets):
 
 ```bash
 python main.py
 ```
 
-## 3. Rodar o dashboard
+Start the dashboard:
 
 ```bash
 streamlit run app/app.py
@@ -140,34 +90,29 @@ streamlit run app/app.py
 
 ---
 
-# 🧪 Tecnologias Utilizadas
+## Tech stack
 
-- Python
-- Pandas
-- Streamlit
-- Parquet (PyArrow)
-- Análise exploratória de dados (EDA)
-
----
-
-# 📁 Estrutura dos Dados
-
-- **by_passenger**: agregação por número de passageiros
-- **by_day**: métricas diárias
-- **by_week**: métricas semanais
-- **by_shift_payment**: análise por turno e forma de pagamento
-- **by_route_top100**: rotas mais frequentes
+| Area | Tools |
+| --- | --- |
+| Ingestion | kagglehub |
+| Processing | DuckDB, SQL |
+| Storage format | Parquet |
+| Serving | Streamlit, pandas |
 
 ---
 
-# 📌 Fonte
+## Roadmap
 
-https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data
+- Orchestrate the pipeline with Airflow
+- Model the aggregations as dbt models with tests
+- Add data quality validation between the raw and processed layers
 
 ---
 
-# 👨‍💻 Autor
+## License
 
-Projeto desenvolvido para fins de estudo em análise de dados, engenharia de dados e visualização interativa.
+[MIT](LICENSE)
 
-@lesoares96
+---
+
+Built by [@leosoares96](https://github.com/leosoares96) · [leosoares96.github.io](https://leosoares96.github.io/)
